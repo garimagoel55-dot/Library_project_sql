@@ -1,4 +1,4 @@
-# Library Management System using SQL Project --P2
+# Library Management System 
 
 ## Project Overview
 
@@ -8,7 +8,7 @@
 
 This project demonstrates the implementation of a Library Management System using SQL. It includes creating and managing tables, performing CRUD operations, and executing advanced SQL queries. The goal is to showcase skills in database design, manipulation, and querying.
 
-![Library_project](https://github.com/najirh/Library-System-Management---P2/blob/main/library.jpg)
+![Library_project](https://github.com/garimagoel55-dot/Library_project_sql/blob/main/Library.jpg)
 
 ## Objectives
 
@@ -20,7 +20,7 @@ This project demonstrates the implementation of a Library Management System usin
 ## Project Structure
 
 ### 1. Database Setup
-![ERD](https://github.com/najirh/Library-System-Management---P2/blob/main/library_erd.png)
+![ERD](https://github.com/garimagoel55-dot/Library_project_sql/blob/main/library_erd.png)
 
 - **Database Creation**: Created a database named `library_db`.
 - **Table Creation**: Created tables for branches, employees, members, books, issued status, and return status. Each table includes relevant columns and relationships.
@@ -33,79 +33,98 @@ CREATE TABLE branch
 (
             branch_id VARCHAR(10) PRIMARY KEY,
             manager_id VARCHAR(10),
-            branch_address VARCHAR(30),
-            contact_no VARCHAR(15)
-);
-
-
--- Create table "Employee"
-DROP TABLE IF EXISTS employees;
-CREATE TABLE employees
-(
-            emp_id VARCHAR(10) PRIMARY KEY,
-            emp_name VARCHAR(30),
-            position VARCHAR(30),
-            salary DECIMAL(10,2),
-            branch_id VARCHAR(10),
-            FOREIGN KEY (branch_id) REFERENCES  branch(branch_id)
+            branch_address VARCHAR(60),
+            contact_no VARCHAR(10)
 );
 
 
 -- Create table "Members"
-DROP TABLE IF EXISTS members;
-CREATE TABLE members
+Create table members 
 (
-            member_id VARCHAR(10) PRIMARY KEY,
-            member_name VARCHAR(30),
-            member_address VARCHAR(30),
-            reg_date DATE
+     member_id VARCHAR(10) PRIMARY KEY,
+	 member_name VARCHAR(20),
+	 member_address VARCHAR(20),
+	 reg_date DATE
 );
+alter table branch
+alter column contact_no TYPE VARCHAR(20);
 
+-- Create table "Employees"
+CREATE TABLE employees 
+(
+  emp_id varchar(10) Primary Key,
+  emp_name VARCHAR(20), 
+  position VARCHAR(15),
+  salary INT,
+  branch_id VARCHAR(20)
+);
+alter table employees
+alter column salary TYPE FLOAT;
 
 
 -- Create table "Books"
-DROP TABLE IF EXISTS books;
-CREATE TABLE books
+Create Table books 
 (
-            isbn VARCHAR(50) PRIMARY KEY,
-            book_title VARCHAR(80),
-            category VARCHAR(30),
-            rental_price DECIMAL(10,2),
-            status VARCHAR(10),
-            author VARCHAR(30),
-            publisher VARCHAR(30)
+ isbn VARCHAR(20) PRIMARY KEY,
+ book_title VARCHAR(100),
+ category VARCHAR(25),
+ rental_price INT,
+ status VARCHAR(10),
+ author VARCHAR(40),
+ publisher VARCHAR(40)
 );
-
+alter table books
+alter column rental_price TYPE FLOAT;
 
 
 -- Create table "IssueStatus"
 DROP TABLE IF EXISTS issued_status;
-CREATE TABLE issued_status
+Create table issued_status 
 (
-            issued_id VARCHAR(10) PRIMARY KEY,
-            issued_member_id VARCHAR(30),
-            issued_book_name VARCHAR(80),
-            issued_date DATE,
-            issued_book_isbn VARCHAR(50),
-            issued_emp_id VARCHAR(10),
-            FOREIGN KEY (issued_member_id) REFERENCES members(member_id),
-            FOREIGN KEY (issued_emp_id) REFERENCES employees(emp_id),
-            FOREIGN KEY (issued_book_isbn) REFERENCES books(isbn) 
+issued_id VARCHAR(10) PRIMARY KEY,
+issued_member_id VARCHAR(10),
+issued_book_name VARCHAR(70),
+issued_date DATE,
+issued_book_isbn VARCHAR(20),
+issued_emp_id VARCHAR(10)
 );
-
 
 
 -- Create table "ReturnStatus"
-DROP TABLE IF EXISTS return_status;
-CREATE TABLE return_status
+Create table return_status
 (
-            return_id VARCHAR(10) PRIMARY KEY,
-            issued_id VARCHAR(30),
-            return_book_name VARCHAR(80),
-            return_date DATE,
-            return_book_isbn VARCHAR(50),
-            FOREIGN KEY (return_book_isbn) REFERENCES books(isbn)
+return_id VARCHAR(10) PRIMARY KEY,
+issued_id VARCHAR(10),
+return_book_name VARCHAR(75),
+return_date DATE,
+return_book_isbn VARCHAR(20)
 );
+
+--FOREIGN KEY
+ALTER TABLE issued_status
+ADD CONSTRAINT fk_members
+FOREIGN KEY (issued_member_id)
+REFERENCES members(member_id);
+
+ALTER TABLE issued_status
+ADD CONSTRAINT fk_books
+FOREIGN KEY (issued_book_isbn)
+REFERENCES books(isbn);
+
+ALTER TABLE issued_status
+ADD CONSTRAINT fk_employees
+FOREIGN KEY (issued_emp_id)
+REFERENCES employees(emp_id);
+
+ALTER TABLE employees
+ADD CONSTRAINT fk_branch
+FOREIGN KEY (branch_id)
+REFERENCES branch(branch_id);
+
+ALTER TABLE return_status
+ADD CONSTRAINT fk_issued_status
+FOREIGN KEY (issued_id)
+REFERENCES issued_status(issued_id);
 
 ```
 
@@ -129,7 +148,7 @@ SELECT * FROM books;
 ```sql
 UPDATE members
 SET member_address = '125 Oak St'
-WHERE member_id = 'C103';
+WHERE member_id = 'C101';
 ```
 
 **Task 3: Delete a Record from the Issued Status Table**
@@ -165,15 +184,18 @@ HAVING COUNT(*) > 1
 - **Task 6: Create Summary Tables**: Used CTAS to generate new tables based on query results - each book and total book_issued_cnt**
 
 ```sql
-CREATE TABLE book_issued_cnt AS
-SELECT b.isbn, b.book_title, COUNT(ist.issued_id) AS issue_count
-FROM issued_status as ist
-JOIN books as b
+CREATE TABLE book_cnts
+AS
+SELECT 
+     b.isbn,
+     b.book_title,
+      COUNT(ist.issued_id) as no_issued
+FROM books as b
+JOIN
+issued_status as ist
 ON ist.issued_book_isbn = b.isbn
-GROUP BY b.isbn, b.book_title;
+GROUP BY 1,2;
 ```
-
-
 ### 4. Data Analysis & Findings
 
 The following SQL queries were used to address specific questions:
@@ -283,12 +305,10 @@ LANGUAGE plpgsql
 AS $$
 
 DECLARE
-    v_isbn VARCHAR(50);
-    v_book_name VARCHAR(80);
+    v_isbn VARCHAR(20);
+    v_book_name VARCHAR(100);
     
 BEGIN
-    -- all your logic and code
-    -- inserting into returns based on users input
     INSERT INTO return_status(return_id, issued_id, return_date, book_quality)
     VALUES
     (p_return_id, p_issued_id, CURRENT_DATE, p_book_quality);
@@ -334,9 +354,6 @@ CALL add_return_records('RS148', 'IS140', 'Good');
 
 ```
 
-
-
-
 **Task 15: Branch Performance Report**  
 Create a query that generates a performance report for each branch, showing the number of books issued, the number of books returned, and the total revenue generated from book rentals.
 
@@ -348,7 +365,7 @@ SELECT
     b.manager_id,
     COUNT(ist.issued_id) as number_book_issued,
     COUNT(rs.return_id) as number_of_book_return,
-    SUM(bk.rental_price) as total_revenue
+    SUM(bk.rental_price) as Total_revenue
 FROM issued_status as ist
 JOIN 
 employees as e
@@ -368,7 +385,7 @@ SELECT * FROM branch_reports;
 ```
 
 **Task 16: CTAS: Create a Table of Active Members**  
-Use the CREATE TABLE AS (CTAS) statement to create a new table active_members containing members who have issued at least one book in the last 2 months.
+Use the CREATE TABLE AS (CTAS) statement to create a new table active_members containing members who have issued at least one book in the last 24 months.
 
 ```sql
 
@@ -379,7 +396,7 @@ WHERE member_id IN (SELECT
                         DISTINCT issued_member_id   
                     FROM issued_status
                     WHERE 
-                        issued_date >= CURRENT_DATE - INTERVAL '2 month'
+                        issued_date >= CURRENT_DATE - INTERVAL '24 month'
                     )
 ;
 
@@ -404,13 +421,10 @@ JOIN
 branch as b
 ON e.branch_id = b.branch_id
 GROUP BY 1, 2
-```
-
-**Task 18: Identify Members Issuing High-Risk Books**  
-Write a query to identify members who have issued books more than twice with the status "damaged" in the books table. Display the member name, book title, and the number of times they've issued damaged books.    
+``` 
 
 
-**Task 19: Stored Procedure**
+**Task 18: Stored Procedure**
 Objective:
 Create a stored procedure to manage the status of books in a library system.
 Description:
@@ -473,22 +487,6 @@ WHERE isbn = '978-0-375-41398-8'
 
 ```
 
-
-
-**Task 20: Create Table As Select (CTAS)**
-Objective: Create a CTAS (Create Table As Select) query to identify overdue books and calculate fines.
-
-Description: Write a CTAS query to create a new table that lists each member and the books they have issued but not returned within 30 days. The table should include:
-    The number of overdue books.
-    The total fines, with each day's fine calculated at $0.50.
-    The number of books issued by each member.
-    The resulting table should show:
-    Member ID
-    Number of overdue books
-    Total fines
-
-
-
 ## Reports
 
 - **Database Schema**: Detailed table structures and relationships.
@@ -499,24 +497,10 @@ Description: Write a CTAS query to create a new table that lists each member and
 
 This project demonstrates the application of SQL skills in creating and managing a library management system. It includes database setup, data manipulation, and advanced querying, providing a solid foundation for data management and analysis.
 
-## How to Use
+## Contact
+Let's connect!
 
-1. **Clone the Repository**: Clone this repository to your local machine.
-   ```sh
-   git clone https://github.com/najirh/Library-System-Management---P2.git
-   ```
+Email: [garimagoel55@gmail.com]
+LinkedIn: linkedin.com/in/garima-goel-46a5b5142
 
-2. **Set Up the Database**: Execute the SQL scripts in the `database_setup.sql` file to create and populate the database.
-3. **Run the Queries**: Use the SQL queries in the `analysis_queries.sql` file to perform the analysis.
-4. **Explore and Modify**: Customize the queries as needed to explore different aspects of the data or answer additional questions.
-
-## Author - Zero Analyst
-
-This project showcases SQL skills essential for database management and analysis. For more content on SQL and data analysis, connect with me through the following channels:
-
-- **YouTube**: [Subscribe to my channel for tutorials and insights](https://www.youtube.com/@zero_analyst)
-- **Instagram**: [Follow me for daily tips and updates](https://www.instagram.com/zero_analyst/)
-- **LinkedIn**: [Connect with me professionally](https://www.linkedin.com/in/najirr)
-- **Discord**: [Join our community for learning and collaboration](https://discord.gg/36h5f2Z5PK)
-
-Thank you for your interest in this project!
+⭐ If you like this project, consider giving it a star to support my work!
